@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "encore.dev": "^1.43.8"
+  },
+  "scripts":{
+    "start":"cd frontend && npm run build && encore run"
   }
 }
