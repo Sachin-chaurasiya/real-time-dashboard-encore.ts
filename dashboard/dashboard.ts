@@ -2,28 +2,19 @@ import { api, StreamInOut } from 'encore.dev/api';
 import log from 'encore.dev/log';
 
 // Map to hold all connected streams
-const connectedStreams: Map<string, StreamInOut<PostSale, Sale>> = new Map();
+const connectedStreams: Map<string, StreamInOut<Sale, Sale>> = new Map();
 
-// Object sent from the client to the server when establishing a connection
 interface HandshakeRequest {
   id: string;
 }
 
-// Object sent from the client to the server when posting a message
-interface PostSale {
-  sale: string;
-  total: number;
-  date: string;
-}
-
-// Object sent from the server to the client when receiving a message
 interface Sale {
   sale: string;
   total: number;
   date: string;
 }
 
-export const sale = api.streamInOut<HandshakeRequest, PostSale, Sale>(
+export const sale = api.streamInOut<HandshakeRequest, Sale, Sale>(
   { expose: true, auth: false, path: '/sale' },
   async (handshake, stream) => {
     connectedStreams.set(handshake.id, stream);

@@ -67,7 +67,7 @@ export namespace dashboard {
         id: string
     }
 
-    export interface PostSale {
+    export interface Sale {
         sale: string
         total: number
         date: string
@@ -86,7 +86,7 @@ export namespace dashboard {
             this.baseClient = baseClient
         }
 
-        public async sale(params: HandshakeRequest): Promise<StreamInOut<PostSale, Sale>> {
+        public async sale(params: HandshakeRequest): Promise<StreamInOut<Sale, Sale>> {
             // Convert our params into the objects we need for the request
             const query = makeRecord<string, string | string[]>({
                 id: params.id,
