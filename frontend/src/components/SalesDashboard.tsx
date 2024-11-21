@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
-import { dashboard, StreamInOut } from '../lib/client';
+import { dashboard } from '../lib/client';
 import { v4 as uuidv4 } from 'uuid';
 import getRequestClient from '../lib/getRequestClient';
 import { MOCK_SALES_DATA } from '../constant';
@@ -18,11 +18,11 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
 
   const [userID] = useState<string>(uuidv4());
   const [loading, setLoading] = useState(true);
-  const [salesData, setSalesData] = useState<dashboard.Sale[]>(
-    MOCK_SALES_DATA.slice(0, 5)
-  );
+  const [recentSalesData, setRecentSalesData] = useState<dashboard.Sale[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isGeneratingSales, setIsGeneratingSales] = useState(false);
+
+  const [salesData, setSalesData] = useState<dashboard.Sale[]>([]);
 
   const { isManager, roleLabel } = useMemo(() => {
     const isManager = role === 'manager';
@@ -39,16 +39,27 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
     highestSale,
     lowestSale,
     recentSales,
+    combinedSales,
   } = useMemo(() => {
-    const totalSalesAmount = salesData.reduce(
+    const combinedSales = [...salesData, ...recentSalesData];
+    const hasRecentSalesData = combinedSales.length > 0;
+    const totalSalesAmount = combinedSales.reduce(
       (acc, sale) => acc + sale.total,
       0
     );
-    const distinctSalesCount = new Set(salesData.map((sale) => sale.sale)).size;
-    const averageSaleAmount = (totalSalesAmount / salesData.length).toFixed(2);
-    const highestSale = Math.max(...salesData.map((sale) => sale.total));
-    const lowestSale = Math.min(...salesData.map((sale) => sale.total));
-    const recentSales = salesData.slice(-5).reverse(); // Show the last 5 sales
+    const distinctSalesCount = new Set(combinedSales.map((sale) => sale.sale))
+      .size;
+    const averageSaleAmount = hasRecentSalesData
+      ? (totalSalesAmount / combinedSales.length).toFixed(2)
+      : 0;
+    const highestSale = hasRecentSalesData
+      ? Math.max(...combinedSales.map((sale) => sale.total))
+      : 0;
+    const lowestSale = hasRecentSalesData
+      ? Math.min(...combinedSales.map((sale) => sale.total))
+      : 0;
+
+    const recentSales = combinedSales.slice(-5).reverse(); // Show the last 5 sales
 
     return {
       totalSalesAmount,
@@ -57,8 +68,18 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
       highestSale,
       lowestSale,
       recentSales,
+      combinedSales,
     };
-  }, [salesData]);
+  }, [salesData, recentSalesData]);
+
+  const fetchSales = async () => {
+    try {
+      const { sales } = await getRequestClient().dashboard.listSales();
+      setSalesData(sales);
+    } catch (error) {
+      console.error('Error fetching sales data:', error);
+    }
+  };
 
   const handleAddSale = async (newSale: {
     sale: string;
@@ -71,20 +92,22 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
   };
 
   const handleGenerateSales = async () => {
-    if (!saleStream.current || loading) return;
-
-    const sendSalesData = async (
-      activeStream: StreamInOut<dashboard.PostSale, dashboard.Sale>
-    ) => {
+    const uniqueID = uuidv4();
+    const sendSalesData = async () => {
       for await (const sale of MOCK_SALES_DATA) {
         // Simulate a delay of 3 seconds between each sale
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        await activeStream.send(sale);
+        await getRequestClient().dashboard.addSale({
+          ...sale,
+          id: uniqueID,
+          sale: `${sale.sale} - ${new Date().toISOString()}`,
+          date: new Date().toISOString().split('T')[0], // Format date as yyyy-mm-dd
+        });
       }
     };
 
     setIsGeneratingSales(true);
-    await sendSalesData(saleStream.current);
+    await sendSalesData();
     setIsGeneratingSales(false);
   };
 
@@ -98,7 +121,7 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
       saleStream.current.socket.on('open', () => setLoading(false));
 
       for await (const sale of saleStream.current) {
-        setSalesData((prevState) => {
+        setRecentSalesData((prevState) => {
           return [...prevState, sale];
         });
       }
@@ -110,6 +133,10 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
       saleStream.current?.close();
     };
   }, [userID]);
+
+  useEffect(() => {
+    fetchSales();
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
@@ -203,6 +230,37 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
                 </thead>
                 <tbody>
                   {recentSales.map((sale, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <td className="py-2 px-4 border-b">{sale.sale}</td>
+                      <td className="py-2 px-4 border-b">${sale.total}</td>
+                      <td className="py-2 px-4 border-b">{sale.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <hr />
+
+          <div className="mb-8 p-4 bg-blue-100 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">All Time Sales</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-transparent">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border-b text-left">Sale</th>
+                    <th className="py-2 px-4 border-b text-left">Total Sale</th>
+                    <th className="py-2 px-4 border-b text-left">
+                      Date of Sale
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {combinedSales.map((sale, index) => (
                     <tr
                       key={index}
                       className="hover:bg-gray-100 transition-colors duration-200"
