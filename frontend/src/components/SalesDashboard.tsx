@@ -144,50 +144,49 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
           )}
 
           {showForm && <AddSaleForm onAddSale={handleAddSale} />}
-          {salesData.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-blue-800">
-                  Total Sales
-                </h2>
-                <p className="text-2xl font-bold text-blue-900">
-                  ${totalSalesAmount.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-blue-800">
-                  Total Number of Distinct Sales
-                </h2>
-                <p className="text-2xl font-bold text-blue-900">
-                  {distinctSalesCount}
-                </p>
-              </div>
-              <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-blue-800">
-                  Average Sale Amount
-                </h2>
-                <p className="text-2xl font-bold text-blue-900">
-                  ${averageSaleAmount}
-                </p>
-              </div>
-              <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-blue-800">
-                  Highest Sale
-                </h2>
-                <p className="text-2xl font-bold text-blue-900">
-                  ${highestSale.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold text-blue-800">
-                  Lowest Sale
-                </h2>
-                <p className="text-2xl font-bold text-blue-900">
-                  ${lowestSale.toLocaleString()}
-                </p>
-              </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-blue-800">
+                Total Sales
+              </h2>
+              <p className="text-2xl font-bold text-blue-900">
+                ${totalSalesAmount.toLocaleString()}
+              </p>
             </div>
-          )}
+            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-blue-800">
+                Total Number of Distinct Sales
+              </h2>
+              <p className="text-2xl font-bold text-blue-900">
+                {distinctSalesCount}
+              </p>
+            </div>
+            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-blue-800">
+                Average Sale Amount
+              </h2>
+              <p className="text-2xl font-bold text-blue-900">
+                ${averageSaleAmount}
+              </p>
+            </div>
+            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-blue-800">
+                Highest Sale
+              </h2>
+              <p className="text-2xl font-bold text-blue-900">
+                ${highestSale.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-blue-800">
+                Lowest Sale
+              </h2>
+              <p className="text-2xl font-bold text-blue-900">
+                ${lowestSale.toLocaleString()}
+              </p>
+            </div>
+          </div>
 
           <div className="mb-8 p-4 bg-blue-100 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Recent Sales</h2>
