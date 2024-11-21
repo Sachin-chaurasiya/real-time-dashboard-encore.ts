@@ -67,6 +67,10 @@ export namespace dashboard {
         id: string
     }
 
+    export interface ListResponse {
+        sales: Sale[]
+    }
+
     export interface Sale {
         sale: string
         total: number
@@ -84,6 +88,21 @@ export namespace dashboard {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+        }
+
+        public async addSale(params: {
+    sale: string
+    total: number
+    date: string
+    id: string
+}): Promise<void> {
+            await this.baseClient.callAPI("POST", `/sale/add`, JSON.stringify(params))
+        }
+
+        public async listSales(): Promise<ListResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callAPI("GET", `/sale/list`)
+            return await resp.json() as ListResponse
         }
 
         public async sale(params: HandshakeRequest): Promise<StreamInOut<Sale, Sale>> {
