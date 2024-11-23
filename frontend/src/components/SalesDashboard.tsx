@@ -20,8 +20,6 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
   const [userID] = useState<string>(uuidv4());
   const [loading, setLoading] = useState(true);
   const [recentSalesData, setRecentSalesData] = useState<dashboard.Sale[]>([]);
-  const [isGeneratingSales, setIsGeneratingSales] = useState(false);
-
   const [salesData, setSalesData] = useState<dashboard.Sale[]>([]);
 
   const { isManager, roleLabel } = useMemo(() => {
@@ -67,9 +65,7 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
       }
     };
 
-    setIsGeneratingSales(true);
     await sendSalesData();
-    setIsGeneratingSales(false);
   };
 
   useEffect(() => {
@@ -116,9 +112,8 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
           {isManager && (
             <div className="flex gap-4 mb-8">
               <button
-                disabled={isGeneratingSales}
                 onClick={handleGenerateSales}
-                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors duration-300 disabled:cursor-not-allowed"
+                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors duration-300"
               >
                 Generate Sales
               </button>
