@@ -56,8 +56,8 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
     const uniqueID = uuidv4();
     const sendSalesData = async () => {
       for await (const sale of MOCK_SALES_DATA) {
-        // Simulate a delay of 3 seconds between each sale
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        // Simulate a delay of 2 seconds between each sale
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         await getRequestClient().dashboard.addSale({
           ...sale,
           id: uniqueID,
