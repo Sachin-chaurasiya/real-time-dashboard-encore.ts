@@ -2,6 +2,7 @@
 
 ## Running locally
 ```bash
+npm install
 encore run
 ```
 Visit http://127.0.0.1:4000
