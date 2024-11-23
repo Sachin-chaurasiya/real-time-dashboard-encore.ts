@@ -4,7 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import getRequestClient from '../lib/getRequestClient';
 import { MOCK_SALES_DATA } from '../constant';
 import { RoleType } from './RoleSelector';
-import AddSaleForm from './AddSaleForm';
+import SalesTable from './SalesTable';
+import SalesMetrics from './SalesMetrics';
 
 interface SalesDashboardProps {
   role: RoleType;
@@ -19,7 +20,6 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
   const [userID] = useState<string>(uuidv4());
   const [loading, setLoading] = useState(true);
   const [recentSalesData, setRecentSalesData] = useState<dashboard.Sale[]>([]);
-  const [showForm, setShowForm] = useState(false);
   const [isGeneratingSales, setIsGeneratingSales] = useState(false);
 
   const [salesData, setSalesData] = useState<dashboard.Sale[]>([]);
@@ -32,41 +32,12 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
     return { isManager, roleLabel };
   }, [role]);
 
-  const {
-    totalSalesAmount,
-    distinctSalesCount,
-    averageSaleAmount,
-    highestSale,
-    lowestSale,
-    recentSales,
-    combinedSales,
-  } = useMemo(() => {
+  const { recentSales, combinedSales } = useMemo(() => {
     const combinedSales = [...salesData, ...recentSalesData];
-    const hasRecentSalesData = combinedSales.length > 0;
-    const totalSalesAmount = combinedSales.reduce(
-      (acc, sale) => acc + sale.total,
-      0
-    );
-    const distinctSalesCount = new Set(combinedSales.map((sale) => sale.sale))
-      .size;
-    const averageSaleAmount = hasRecentSalesData
-      ? (totalSalesAmount / combinedSales.length).toFixed(2)
-      : 0;
-    const highestSale = hasRecentSalesData
-      ? Math.max(...combinedSales.map((sale) => sale.total))
-      : 0;
-    const lowestSale = hasRecentSalesData
-      ? Math.min(...combinedSales.map((sale) => sale.total))
-      : 0;
 
     const recentSales = combinedSales.slice(-5).reverse(); // Show the last 5 sales
 
     return {
-      totalSalesAmount,
-      distinctSalesCount,
-      averageSaleAmount,
-      highestSale,
-      lowestSale,
       recentSales,
       combinedSales,
     };
@@ -79,16 +50,6 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
     } catch (error) {
       console.error('Error fetching sales data:', error);
     }
-  };
-
-  const handleAddSale = async (newSale: {
-    sale: string;
-    total: number;
-    date: string;
-  }) => {
-    if (!saleStream.current || loading) return;
-
-    saleStream.current.send(newSale);
   };
 
   const handleGenerateSales = async () => {
@@ -155,124 +116,28 @@ export const SalesDashboard: FC<SalesDashboardProps> = ({ role }) => {
           {isManager && (
             <div className="flex gap-4 mb-8">
               <button
-                onClick={() => setShowForm(!showForm)}
-                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors duration-300"
-              >
-                {showForm ? 'Cancel' : 'Add Sale'}
-              </button>
-              <button
                 disabled={isGeneratingSales}
                 onClick={handleGenerateSales}
-                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors duration-300"
+                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors duration-300 disabled:cursor-not-allowed"
               >
                 Generate Sales
               </button>
             </div>
           )}
 
-          {showForm && <AddSaleForm onAddSale={handleAddSale} />}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-blue-800">
-                Total Sales
-              </h2>
-              <p className="text-2xl font-bold text-blue-900">
-                ${totalSalesAmount.toLocaleString()}
-              </p>
-            </div>
-            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-blue-800">
-                Total Number of Distinct Sales
-              </h2>
-              <p className="text-2xl font-bold text-blue-900">
-                {distinctSalesCount}
-              </p>
-            </div>
-            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-blue-800">
-                Average Sale Amount
-              </h2>
-              <p className="text-2xl font-bold text-blue-900">
-                ${averageSaleAmount}
-              </p>
-            </div>
-            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-blue-800">
-                Highest Sale
-              </h2>
-              <p className="text-2xl font-bold text-blue-900">
-                ${highestSale.toLocaleString()}
-              </p>
-            </div>
-            <div className="p-4 bg-blue-100 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-blue-800">
-                Lowest Sale
-              </h2>
-              <p className="text-2xl font-bold text-blue-900">
-                ${lowestSale.toLocaleString()}
-              </p>
-            </div>
-          </div>
+          <SalesMetrics
+            salesData={salesData}
+            recentSalesData={recentSalesData}
+          />
 
           <div className="mb-8 p-4 bg-blue-100 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Recent Sales</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-transparent">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b text-left">Sale</th>
-                    <th className="py-2 px-4 border-b text-left">Total Sale</th>
-                    <th className="py-2 px-4 border-b text-left">
-                      Date of Sale
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentSales.map((sale, index) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      <td className="py-2 px-4 border-b">{sale.sale}</td>
-                      <td className="py-2 px-4 border-b">${sale.total}</td>
-                      <td className="py-2 px-4 border-b">{sale.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <SalesTable salesData={recentSales} />
           </div>
-
-          <hr />
 
           <div className="mb-8 p-4 bg-blue-100 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">All Time Sales</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-transparent">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b text-left">Sale</th>
-                    <th className="py-2 px-4 border-b text-left">Total Sale</th>
-                    <th className="py-2 px-4 border-b text-left">
-                      Date of Sale
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {combinedSales.map((sale, index) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      <td className="py-2 px-4 border-b">{sale.sale}</td>
-                      <td className="py-2 px-4 border-b">${sale.total}</td>
-                      <td className="py-2 px-4 border-b">{sale.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <SalesTable salesData={combinedSales} />
           </div>
         </>
       )}
